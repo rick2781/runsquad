@@ -47,8 +47,9 @@ dependencies {
 
     //testing dependencies
     testImplementation "junit:junit:4.12"
-    testImplementation "org.mockito:mockito-inline:3.3.3"
-    testImplementation "androidx.arch.core:core-testing:2.1.0"
-    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
+//    testImplementation "org.mockito:mockito-inline:3.3.3"
+//    testImplementation "androidx.arch.core:core-testing:2.1.0"
+//    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
     testImplementation "org.robolectric:robolectric:4.3.1"
+    testImplementation "com.google.truth:truth:1.0.1"
 }
