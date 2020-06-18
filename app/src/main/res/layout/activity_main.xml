@@ -24,18 +24,70 @@
         app:layout_constraintEnd_toStartOf="@+id/pace"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/pace" />
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="84dp"
+        android:text="distance"
+        app:layout_constraintEnd_toEndOf="@+id/distanceTravelled"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/distanceTravelled"
+        app:layout_constraintTop_toBottomOf="@+id/chronometer" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="pace"
+        app:layout_constraintEnd_toEndOf="@+id/pace"
+        app:layout_constraintStart_toStartOf="@+id/pace"
+        app:layout_constraintTop_toBottomOf="@+id/chronometer" />
 
     <TextView
         android:id="@+id/pace"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
         android:text="asodifh"
+        app:layout_constraintBottom_toBottomOf="@+id/distanceTravelled"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/distanceTravelled"
-        app:layout_constraintTop_toBottomOf="@+id/chronometer" />
+        app:layout_constraintTop_toBottomOf="@+id/textView2" />
+
+    <Button
+        android:id="@+id/startPauseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@+id/resumeButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="start"
+        app:layout_constraintTop_toTopOf="@+id/resumeButton" />
+
+    <Button
+        android:id="@+id/stopButton"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="stop"
+        app:layout_constraintBottom_toBottomOf="@+id/resumeButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/resumeButton" />
+
+    <Button
+        android:id="@+id/resumeButton"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="resume"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/stopButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/distanceTravelled" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

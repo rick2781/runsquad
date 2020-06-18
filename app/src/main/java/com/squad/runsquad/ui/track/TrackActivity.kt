@@ -1,30 +1,67 @@
 package com.squad.runsquad.ui.track
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
+import android.content.IntentSender
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import android.widget.Chronometer
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
+import androidx.core.app.ActivityCompat
+import androidx.core.view.isVisible
+import androidx.lifecycle.Observer
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.single.PermissionListener
 import com.squad.runsquad.R
+import com.squad.runsquad.data.model.TrackState
+import com.squad.runsquad.data.model.TrackState.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 class TrackActivity : AppCompatActivity() {
 
+    private val TAG = "TrackActivity.tag"
+
     private val locationRequest = LocationRequest()
     private lateinit var locationCallback: LocationCallback
+    private lateinit var locationSettingsRequest: LocationSettingsRequest
+    private lateinit var settingsClient: SettingsClient
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val trackViewModel by viewModels<TrackViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        setupRequiredStartup()
+        requestPermission()
+    }
+
+    private fun setupRequiredStartup() {
+        settingsClient = LocationServices.getSettingsClient(this)
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         setupLocationRequest()
+        buildLocationSettingsRequest()
+
         setupChronometer()
+
+        setupUIListeners()
+        setupButtons()
     }
 
     private fun setupLocationRequest() {
@@ -38,21 +75,174 @@ class TrackActivity : AppCompatActivity() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 super.onLocationResult(locationResult)
-
-//                mCurrentLocation = locationResult.lastLocation
-//                mLastUpdateTime = DateFormat.getTimeInstance().format(Date())
-//                updateLocationUI()
+                trackViewModel.updateLocation(locationResult.lastLocation)
             }
         }
+    }
+
+    private fun buildLocationSettingsRequest() {
+        locationSettingsRequest = LocationSettingsRequest.Builder().apply {
+            addLocationRequest(locationRequest)
+        }.build()
     }
 
     private fun setupChronometer() {
         chronometer.onChronometerTickListener = Chronometer.OnChronometerTickListener {
             val time: Long = SystemClock.elapsedRealtime() - it.base
-            val h = (time / 3600000).toInt()
-            val m = (time - h * 3600000).toInt() / 60000
-            val s = (time - h * 3600000 - m * 60000).toInt() / 1000
-            it.text = String.format("%02d:%02d:%02d", h, m, s)
+            trackViewModel.timeElapsed.postValue(time)
+            it.text = formatTime(time)
+        }
+    }
+
+    //todo - refactor and put this on view model cause it's business logic
+    private fun formatTime(time: Long): String {
+        val h = (time / 3600000).toInt()
+        val m = (time - h * 3600000).toInt() / 60000
+        val s = (time - h * 3600000 - m * 60000).toInt() / 1000
+        return String.format("%02d:%02d:%02d", h, m, s)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startLocationUpdates() {
+
+        // Begin by checking if the device has the necessary location settings.
+        settingsClient.checkLocationSettings(locationSettingsRequest)
+            .addOnSuccessListener {
+                Log.d(TAG, "startLocationUpdates: All location settings are satisfied.")
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper()
+                )
+                //todo - start everything
+            }
+            .addOnFailureListener {
+
+                when ((it as ApiException).statusCode) {
+
+                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED -> {
+
+                        Log.d(TAG, "Location settings are not satisfied. Attempting to upgrade location settings ")
+
+                        try {
+                            (it as ResolvableApiException).startResolutionForResult(this, REQUEST_CHECK_SETTINGS)
+                        } catch (sie: IntentSender.SendIntentException) {
+                            Log.d(TAG, "PendingIntent unable to execute request.")
+                        }
+                    }
+
+                    LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
+
+                        val errorMessage = "Location settings are inadequate, and cannot be fixed here. Fix in Settings."
+                        Log.e(TAG, errorMessage)
+
+                        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                }
+                //todo - update ui accordingly
+            }
+    }
+
+    private fun stopLocationUpdates() {
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+            .addOnCompleteListener {
+                    //todo - update ui accordingly
+            }
+    }
+
+    private fun setupButtons() {
+        startPauseButton.setOnClickListener {
+            when(trackViewModel.isRunning.value) {
+                ACTIVE -> trackViewModel.pause()
+                NOT_STARTED -> trackViewModel.start()
+                else -> null
+            }
+        }
+
+        stopButton.setOnClickListener {
+            trackViewModel.stop()
+        }
+
+        resumeButton.setOnClickListener {
+            trackViewModel.resume()
+        }
+    }
+
+    private fun setupUIListeners() {
+        trackViewModel.isRunning.observe(this, Observer {
+            when(it) {
+                ACTIVE -> {
+                    chronometer.start()
+
+                    startPauseButton.text = "pause"
+                    startPauseButton.isVisible = true
+                    stopButton.isVisible = false
+                    resumeButton.isVisible = false
+
+                    if (checkPermissions()) startLocationUpdates() else requestPermission()
+                }
+                PAUSED -> {
+                    startPauseButton.isVisible = false
+                    stopButton.isVisible = true
+                    resumeButton.isVisible = true
+                    chronometer.stop()
+                }
+                STOPPED -> {
+                    stopLocationUpdates()
+                    //todo - save log with view model when user is done running
+                }
+            }
+        })
+    }
+
+    private fun requestPermission() {
+        Dexter.withContext(this)
+            .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+            .withListener(object: PermissionListener {
+                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+                    trackViewModel.start()
+                }
+
+                override fun onPermissionRationaleShouldBeShown(
+                    p0: PermissionRequest?,
+                    p1: PermissionToken?
+                ) {
+                    // todo - implement this
+                }
+
+                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
+//                    SnackbarOnDeniedPermissionListener.Builder.with(findViewById(android.R.id.content), "hahaha")
+//                        .withOpenSettingsButton("Settings")
+//                        .build()
+//                        .onPermissionGranted(PermissionGrantedResponse())
+                }
+            }).check()
+    }
+
+    private fun checkPermissions(): Boolean =
+        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+
+    override fun onStop() {
+        super.onStop()
+        stopLocationUpdates()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+
+            when (resultCode) {
+                Activity.RESULT_OK -> {
+                    Log.d(TAG, "onActivityResult: User agreed to make required location settings changes.")
+                }
+
+                Activity.RESULT_CANCELED -> {
+                    Log.d(TAG, "onActivityResult: User chose not to make required location settings changes.")
+                    // send viewmodel to do something here
+                }
+            }
         }
     }
 
@@ -67,5 +257,10 @@ class TrackActivity : AppCompatActivity() {
          * Fastest interval in milliseconds. It's exact. It will never happen more often than this value
          */
         const val FASTEST_UPDATE_INTERVAL = UPDATE_INTERVAL / 2
+
+        /**
+         * Constant used in the location settings dialog.
+         */
+        const val REQUEST_CHECK_SETTINGS = 0x1
     }
 }

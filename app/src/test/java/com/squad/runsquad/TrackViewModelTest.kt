@@ -14,6 +14,8 @@ import java.lang.AssertionError
 @RunWith(RobolectricTestRunner::class)
 class TrackViewModelTest {
 
+    //todo - Update tests with hamcrest or something else to be better and more consistent
+
     private lateinit var trackViewModel: TrackViewModel
 
     private lateinit var location: Location
@@ -21,8 +23,6 @@ class TrackViewModelTest {
     @Before
     fun setupTest() {
         trackViewModel = TrackViewModel()
-
-        Log.d("testrick", "setupTest: test")
 
         location = Location("firstLocation").apply {
             latitude = 39.604466
