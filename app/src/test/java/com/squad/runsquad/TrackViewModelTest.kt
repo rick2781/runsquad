@@ -75,4 +75,13 @@ class TrackViewModelTest {
 //        throw AssertionError(middleLocation.distanceTo(lastLocation))
         assert(trackViewModel.distanceTraveled.getOrAwaitValue() == 4.68F)
     }
+
+//    @Test
+//    fun testAveragePaceCalculation() {
+//
+//        trackViewModel.calculateAveragePace(600000, 5.00F)
+//
+//        throw AssertionError(trackViewModel.averagePace.getOrAwaitValue())
+////        assert( == 20F)
+//    }
 }

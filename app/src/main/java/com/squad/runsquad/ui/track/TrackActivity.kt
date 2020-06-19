@@ -27,11 +27,15 @@ import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import com.squad.runsquad.R
-import com.squad.runsquad.data.model.TrackState
 import com.squad.runsquad.data.model.TrackState.*
+import com.squad.runsquad.util.round
 import kotlinx.android.synthetic.main.activity_main.*
 
-
+/**
+ * The flow of initialization here is:
+ *
+ * User input (start button pressed) -> activity start -> startLocationUpdate() -> trackViewModelStart()
+ */
 class TrackActivity : AppCompatActivity() {
 
     private val TAG = "TrackActivity.tag"
@@ -102,6 +106,8 @@ class TrackActivity : AppCompatActivity() {
         return String.format("%02d:%02d:%02d", h, m, s)
     }
 
+    private fun formatPace(pace: Float): String = pace.toString().replace(".", ":")
+
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
 
@@ -154,7 +160,7 @@ class TrackActivity : AppCompatActivity() {
         startPauseButton.setOnClickListener {
             when(trackViewModel.isRunning.value) {
                 ACTIVE -> trackViewModel.pause()
-                NOT_STARTED -> trackViewModel.start()
+                NOT_STARTED -> if (checkPermissions()) startLocationUpdates() else requestPermission()
                 else -> null
             }
         }
@@ -170,7 +176,7 @@ class TrackActivity : AppCompatActivity() {
 
     private fun setupUIListeners() {
         trackViewModel.isRunning.observe(this, Observer {
-            when(it) {
+                when(it) {
                 ACTIVE -> {
                     chronometer.start()
 
@@ -178,20 +184,27 @@ class TrackActivity : AppCompatActivity() {
                     startPauseButton.isVisible = true
                     stopButton.isVisible = false
                     resumeButton.isVisible = false
-
-                    if (checkPermissions()) startLocationUpdates() else requestPermission()
                 }
                 PAUSED -> {
                     startPauseButton.isVisible = false
                     stopButton.isVisible = true
                     resumeButton.isVisible = true
                     chronometer.stop()
+                    stopLocationUpdates()
                 }
                 STOPPED -> {
                     stopLocationUpdates()
                     //todo - save log with view model when user is done running
                 }
             }
+        })
+
+        trackViewModel.distanceTraveled.observe(this, Observer {
+            distanceTravelled.text = it.round().toString()
+        })
+
+        trackViewModel.averagePace.observe(this, Observer {
+            if (it != Float.POSITIVE_INFINITY) pace.text = formatPace(it.round())
         })
     }
 
@@ -200,7 +213,7 @@ class TrackActivity : AppCompatActivity() {
             .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
             .withListener(object: PermissionListener {
                 override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
-                    trackViewModel.start()
+                    startLocationUpdates()
                 }
 
                 override fun onPermissionRationaleShouldBeShown(

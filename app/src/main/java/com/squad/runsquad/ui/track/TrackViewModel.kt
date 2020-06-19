@@ -6,11 +6,24 @@ import androidx.lifecycle.ViewModel
 import com.squad.runsquad.data.model.TrackState
 import com.squad.runsquad.util.aggregateValue
 import com.squad.runsquad.util.round
+import java.util.concurrent.TimeUnit
 
 class TrackViewModel : ViewModel() {
 
+    /**
+     * Distance travelled in km - e.g. 1.3 = 1km 300 meters
+     */
     val distanceTraveled = MutableLiveData<Float>()
+
+    /**
+     * Time elapsed in milliseconds
+     */
     val timeElapsed = MutableLiveData<Long>()
+
+    /**
+     * average pace in "time" - e.g. 2.4 = 2 minutes 40 seconds
+     */
+    val averagePace = MutableLiveData<Float>()
 
     val isRunning = MutableLiveData<TrackState>()
 
@@ -35,9 +48,23 @@ class TrackViewModel : ViewModel() {
 
         updateDistanceTravelled(lastLocation.distanceTo(location))
         lastLocation = location
+
+        calculateAveragePace(timeElapsed.value!!, distanceTraveled.value!!)
     }
 
-    private fun updateDistanceTravelled(value: Float) = distanceTraveled.aggregateValue((value / 1000).round())
+    private fun calculateAveragePace(timeMillis: Long, distance: Float) {
+
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(timeMillis)
+        val seconds = (timeMillis / 1000) % 60
+
+        val timeDecimal = "$minutes.$seconds".toFloat()
+
+        averagePace.postValue(timeDecimal / distance)
+    }
+
+    private fun updateDistanceTravelled(value: Float) {
+        distanceTraveled.aggregateValue((value / 1000))
+    }
 
     fun start() {
         isRunning.postValue(TrackState.ACTIVE)
