@@ -52,7 +52,6 @@ class TrackActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupRequiredStartup()
-        requestPermission()
     }
 
     private fun setupRequiredStartup() {
@@ -90,21 +89,35 @@ class TrackActivity : AppCompatActivity() {
         }.build()
     }
 
-    private fun setupChronometer() {
-        chronometer.onChronometerTickListener = Chronometer.OnChronometerTickListener {
-            val time: Long = SystemClock.elapsedRealtime() - it.base
-            trackViewModel.timeElapsed.postValue(time)
-            it.text = formatTime(time)
+    private fun startFlow() {
+        if (checkPermissions()) startLocationUpdates() else requestPermission()
+
+        with(chronometer) {
+            base = SystemClock.elapsedRealtime() + (trackViewModel.timeElapsed.value ?: 0L)
+            start()
         }
     }
 
-    //todo - refactor and put this on view model cause it's business logic
-    private fun formatTime(time: Long): String {
-        val h = (time / 3600000).toInt()
-        val m = (time - h * 3600000).toInt() / 60000
-        val s = (time - h * 3600000 - m * 60000).toInt() / 1000
-        return String.format("%02d:%02d:%02d", h, m, s)
+    private fun stopFlow() {
+        stopLocationUpdates()
+        trackViewModel.stop()
+        //todo - reset values do whatever when it's done
+        //todo - save log with view model when user is done running
     }
+
+    private fun setupChronometer() {
+        chronometer.onChronometerTickListener = Chronometer.OnChronometerTickListener {
+                //do something everytime counter go up
+        }
+    }
+
+//    //todo - refactor and put this on view model cause it's business logic
+//    private fun formatTime(time: Long): String {
+//        val h = (time / 3600000).toInt()
+//        val m = (time - h * 3600000).toInt() / 60000
+//        val s = (time - h * 3600000 - m * 60000).toInt() / 1000
+//        return String.format("%02d:%02d:%02d", h, m, s)
+//    }
 
     private fun formatPace(pace: Float): String = pace.toString().replace(".", ":")
 
@@ -120,7 +133,8 @@ class TrackActivity : AppCompatActivity() {
                     locationCallback,
                     Looper.getMainLooper()
                 )
-                //todo - start everything
+
+                trackViewModel.start()
             }
             .addOnFailureListener {
 
@@ -157,20 +171,21 @@ class TrackActivity : AppCompatActivity() {
     }
 
     private fun setupButtons() {
-        startPauseButton.setOnClickListener {
-            when(trackViewModel.isRunning.value) {
-                ACTIVE -> trackViewModel.pause()
-                NOT_STARTED -> if (checkPermissions()) startLocationUpdates() else requestPermission()
-                else -> null
-            }
+        startButton.setOnClickListener {
+            startFlow()
+            startButton.isVisible = false
         }
 
         stopButton.setOnClickListener {
-            trackViewModel.stop()
+            stopFlow()
         }
 
         resumeButton.setOnClickListener {
-            trackViewModel.resume()
+            startFlow()
+        }
+
+        pauseButton.setOnClickListener {
+            trackViewModel.pause()
         }
     }
 
@@ -178,23 +193,18 @@ class TrackActivity : AppCompatActivity() {
         trackViewModel.isRunning.observe(this, Observer {
                 when(it) {
                 ACTIVE -> {
-                    chronometer.start()
-
-                    startPauseButton.text = "pause"
-                    startPauseButton.isVisible = true
                     stopButton.isVisible = false
                     resumeButton.isVisible = false
+                    pauseButton.isVisible = true
                 }
-                PAUSED -> {
-                    startPauseButton.isVisible = false
+                INACTIVE -> {
+                    pauseButton.isVisible = false
                     stopButton.isVisible = true
                     resumeButton.isVisible = true
+
+                    trackViewModel.timeElapsed.value = chronometer.base - SystemClock.elapsedRealtime()
                     chronometer.stop()
                     stopLocationUpdates()
-                }
-                STOPPED -> {
-                    stopLocationUpdates()
-                    //todo - save log with view model when user is done running
                 }
             }
         })

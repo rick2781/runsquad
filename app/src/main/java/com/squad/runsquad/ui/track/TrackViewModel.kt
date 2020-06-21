@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.squad.runsquad.data.model.TrackState
 import com.squad.runsquad.util.aggregateValue
-import com.squad.runsquad.util.round
 import java.util.concurrent.TimeUnit
 
 class TrackViewModel : ViewModel() {
@@ -27,11 +26,7 @@ class TrackViewModel : ViewModel() {
 
     val isRunning = MutableLiveData<TrackState>()
 
-    private lateinit var lastLocation: Location
-
-    init {
-        isRunning.postValue(TrackState.NOT_STARTED)
-    }
+    private var lastLocation: Location? = null
 
     /**
      * First entry point to update UI. Here we are receiving location from activity and delegating
@@ -40,16 +35,14 @@ class TrackViewModel : ViewModel() {
     fun updateLocation(location: Location) {
 
         //TODO - simplify this updating distance logic
-        if (!this::lastLocation.isInitialized) {
+        if (lastLocation == null) {
             lastLocation = location
-            distanceTraveled.postValue(0F)
+            if (distanceTraveled.value == null) distanceTraveled.postValue(0F)
             return
         }
 
-        updateDistanceTravelled(lastLocation.distanceTo(location))
+        updateDistanceTravelled(lastLocation!!.distanceTo(location))
         lastLocation = location
-
-        calculateAveragePace(timeElapsed.value!!, distanceTraveled.value!!)
     }
 
     private fun calculateAveragePace(timeMillis: Long, distance: Float) {
@@ -66,12 +59,20 @@ class TrackViewModel : ViewModel() {
         distanceTraveled.aggregateValue((value / 1000))
     }
 
+    fun updateTime(time: Long) {
+        timeElapsed.postValue(time)
+        distanceTraveled.value?.let {
+            calculateAveragePace(time, it)
+        }
+    }
+
     fun start() {
         isRunning.postValue(TrackState.ACTIVE)
     }
 
     fun pause() {
-        isRunning.postValue(TrackState.PAUSED)
+        isRunning.postValue(TrackState.INACTIVE)
+        lastLocation = null
     }
 
     fun resume() {
@@ -79,6 +80,6 @@ class TrackViewModel : ViewModel() {
     }
 
     fun stop() {
-        isRunning.postValue(TrackState.STOPPED)
+        isRunning.postValue(TrackState.INACTIVE)
     }
 }
