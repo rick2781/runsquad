@@ -1,6 +1,8 @@
 package com.squad.runsquad.ui.track
 
 import android.location.Location
+import android.util.Log
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.squad.runsquad.data.model.TrackState
@@ -26,7 +28,13 @@ class TrackViewModel : ViewModel() {
 
     val isRunning = MutableLiveData<TrackState>()
 
+    val distanceTimeMediator = MediatorLiveData<Number>()
+
     private var lastLocation: Location? = null
+
+    init {
+        setupDistanceTimeMediatorSources()
+    }
 
     /**
      * First entry point to update UI. Here we are receiving location from activity and delegating
@@ -45,6 +53,18 @@ class TrackViewModel : ViewModel() {
         lastLocation = location
     }
 
+    private fun setupDistanceTimeMediatorSources() {
+        with(distanceTimeMediator) {
+            addSource(distanceTraveled) {
+                distanceTimeMediator.value = null
+            }
+
+            addSource(timeElapsed) {
+                distanceTimeMediator.value = null
+            }
+        }
+    }
+
     private fun calculateAveragePace(timeMillis: Long, distance: Float) {
 
         val minutes = TimeUnit.MILLISECONDS.toMinutes(timeMillis)
@@ -59,11 +79,9 @@ class TrackViewModel : ViewModel() {
         distanceTraveled.aggregateValue((value / 1000))
     }
 
-    fun updateTime(time: Long) {
-        timeElapsed.postValue(time)
-        distanceTraveled.value?.let {
-            calculateAveragePace(time, it)
-        }
+    fun updatePace() {
+        if (distanceTraveled.value != null && timeElapsed.value != null)
+            calculateAveragePace(timeElapsed.value!!, distanceTraveled.value!!)
     }
 
     fun start() {
