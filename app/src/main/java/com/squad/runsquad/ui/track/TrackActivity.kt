@@ -94,6 +94,8 @@ class TrackActivity : AppCompatActivity() {
 
         with(chronometer) {
             base = SystemClock.elapsedRealtime() + (trackViewModel.timeElapsed.value ?: 0L)
+            Log.d(TAG, "startFlow: base = $base")
+            Log.d(TAG, "startFlow: base value = ${SystemClock.elapsedRealtime() + (trackViewModel.timeElapsed.value ?: 0L)}")
             start()
         }
     }
@@ -108,6 +110,7 @@ class TrackActivity : AppCompatActivity() {
     private fun setupChronometer() {
         chronometer.onChronometerTickListener = Chronometer.OnChronometerTickListener {
                 //do something everytime counter go up
+//            trackViewModel.timeElapsed.value = SystemClock.elapsedRealtime() - chronometer.base
         }
     }
 
@@ -202,7 +205,7 @@ class TrackActivity : AppCompatActivity() {
                     stopButton.isVisible = true
                     resumeButton.isVisible = true
 
-                    trackViewModel.timeElapsed.value = chronometer.base - SystemClock.elapsedRealtime()
+                    trackViewModel.timeElapsed.value = SystemClock.elapsedRealtime() - chronometer.base
                     chronometer.stop()
                     stopLocationUpdates()
                 }
@@ -214,7 +217,11 @@ class TrackActivity : AppCompatActivity() {
         })
 
         trackViewModel.averagePace.observe(this, Observer {
-            if (it != Float.POSITIVE_INFINITY) pace.text = formatPace(it.round())
+            if (it.isFinite()) pace.text = formatPace(it.round())
+        })
+
+        trackViewModel.distanceTimeMediator.observe(this, Observer {
+            trackViewModel.updatePace()
         })
     }
 
