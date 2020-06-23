@@ -30,6 +30,7 @@ import com.squad.runsquad.R
 import com.squad.runsquad.data.model.TrackState.*
 import com.squad.runsquad.util.round
 import kotlinx.android.synthetic.main.activity_main.*
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 /**
  * The flow of initialization here is:
@@ -46,7 +47,7 @@ class TrackActivity : AppCompatActivity() {
     private lateinit var settingsClient: SettingsClient
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    private val trackViewModel by viewModels<TrackViewModel>()
+    private val trackViewModel: TrackViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -179,6 +180,7 @@ class TrackActivity : AppCompatActivity() {
 
         stopButton.setOnClickListener {
             stopFlow()
+            chronometer.base = SystemClock.elapsedRealtime()
         }
 
         resumeButton.setOnClickListener {

@@ -4,11 +4,13 @@ import android.location.Location
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.squad.runsquad.data.model.Track
 import com.squad.runsquad.data.model.TrackState
+import com.squad.runsquad.repository.TrackRepository
 import com.squad.runsquad.util.aggregateValue
 import java.util.concurrent.TimeUnit
 
-class TrackViewModel : ViewModel() {
+class TrackViewModel(private val trackRepository: TrackRepository) : ViewModel() {
 
     /**
      * Distance travelled in km - e.g. 1.3 = 1km 300 meters
@@ -74,6 +76,21 @@ class TrackViewModel : ViewModel() {
         averagePace.postValue(timeDecimal / distance)
     }
 
+    private fun saveTrack() {
+        if (distanceTraveled.value != null && timeElapsed.value != null && averagePace.value != null)
+            trackRepository.saveTrack(Track().apply {
+                distanceTravelled = distanceTraveled.value!!
+                timeElapsed = this@TrackViewModel.timeElapsed.value!!
+                averagePace = this@TrackViewModel.averagePace.value!!
+            })
+    }
+
+    private fun resetTrackValues() {
+        distanceTraveled.value = 0F
+        timeElapsed.value = 0L
+        averagePace.value = 0F
+    }
+
     private fun updateDistanceTravelled(value: Float) {
         distanceTraveled.aggregateValue((value / 1000))
     }
@@ -94,5 +111,7 @@ class TrackViewModel : ViewModel() {
 
     fun stop() {
         isRunning.postValue(TrackState.INACTIVE)
+        saveTrack()
+        resetTrackValues()
     }
 }
