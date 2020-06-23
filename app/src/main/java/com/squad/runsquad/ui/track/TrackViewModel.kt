@@ -1,7 +1,6 @@
 package com.squad.runsquad.ui.track
 
 import android.location.Location
-import android.util.Log
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -91,10 +90,6 @@ class TrackViewModel : ViewModel() {
     fun pause() {
         isRunning.postValue(TrackState.INACTIVE)
         lastLocation = null
-    }
-
-    fun resume() {
-        isRunning.postValue(TrackState.ACTIVE)
     }
 
     fun stop() {
