@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "869490396256",
+    "firebase_url": "https://runsquad-b5a8a.firebaseio.com",
+    "project_id": "runsquad-b5a8a",
+    "storage_bucket": "runsquad-b5a8a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:869490396256:android:85acf2ea812afd4132c705",
+        "android_client_info": {
+          "package_name": "com.squad.runsquad"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "869490396256-mgmvib3o1gmfcrfifus1kb3i5a9cstvs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.squad.runsquad",
+            "certificate_hash": "1f586778fcd8409b800779359a303eb8c7dfe499"
+          }
+        },
+        {
+          "client_id": "869490396256-9cdbmtlua2bco9v0aouc2ue2p48l4ubk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBSjlBsY-d1FgxZq1DzDIHlTatMqM1fzPo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "869490396256-9cdbmtlua2bco9v0aouc2ue2p48l4ubk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
