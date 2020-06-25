@@ -24,39 +24,39 @@ class LaunchOrchestratorActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         userRoute()
-        finish()
     }
 
     private fun userRoute() {
         auth.currentUser?.let {
             startActivity(Intent(this, TrackActivity::class.java))
         } ?: kotlin.run {
-
-            val actionCodeSettings = ActionCodeSettings.newBuilder()
-                .setAndroidPackageName("com.squad.runsquad", true, null)
-                .setHandleCodeInApp(true) // This must be set to true
-                .setUrl("runsquad-b5a8a.firebaseapp.com") // This URL needs to be whitelisted
-                .build();
-
-            val emailBuilder = AuthUI.IdpConfig.EmailBuilder()
-                .enableEmailLinkSignIn()
-                .setActionCodeSettings(actionCodeSettings)
-
-            val providers = arrayListOf(
-                emailBuilder.build(),
-                AuthUI.IdpConfig.PhoneBuilder().build(),
-                AuthUI.IdpConfig.GoogleBuilder().build()
-            )
-
-            // Create and launch sign-in intent
-            startActivityForResult(
-                AuthUI.getInstance()
-                    .createSignInIntentBuilder()
-                    .setAvailableProviders(providers)
-                    .build(),
-                RC_SIGN_IN
-            )
+            launchLoginFirebaseUI()
         }
+    }
+
+    private fun launchLoginFirebaseUI() {
+        val actionCodeSettings = ActionCodeSettings.newBuilder()
+            .setAndroidPackageName("com.squad.runsquad", true, null)
+            .setHandleCodeInApp(true) // This must be set to true
+            .setUrl("runsquad-b5a8a.firebaseapp.com") // This URL needs to be whitelisted
+            .build()
+
+        val emailBuilder = AuthUI.IdpConfig.EmailBuilder()
+
+        val providers = arrayListOf(
+            emailBuilder.build(),
+            AuthUI.IdpConfig.PhoneBuilder().build(),
+            AuthUI.IdpConfig.GoogleBuilder().build()
+        )
+
+        // Create and launch sign-in intent
+        startActivityForResult(
+            AuthUI.getInstance()
+                .createSignInIntentBuilder()
+                .setAvailableProviders(providers)
+                .build(),
+            RC_SIGN_IN
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
