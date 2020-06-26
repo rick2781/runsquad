@@ -8,6 +8,7 @@ import com.squad.runsquad.data.model.Track
 import com.squad.runsquad.data.model.TrackState
 import com.squad.runsquad.repository.TrackRepository
 import com.squad.runsquad.util.aggregateValue
+import com.squad.runsquad.util.round
 import java.util.concurrent.TimeUnit
 
 class TrackViewModel(private val trackRepository: TrackRepository) : ViewModel() {
@@ -15,7 +16,7 @@ class TrackViewModel(private val trackRepository: TrackRepository) : ViewModel()
     /**
      * Distance travelled in km - e.g. 1.3 = 1km 300 meters
      */
-    val distanceTraveled = MutableLiveData<Float>()
+    val distanceTravelled = MutableLiveData<Float>()
 
     /**
      * Time elapsed in milliseconds
@@ -46,7 +47,7 @@ class TrackViewModel(private val trackRepository: TrackRepository) : ViewModel()
         //TODO - simplify this updating distance logic
         if (lastLocation == null) {
             lastLocation = location
-            if (distanceTraveled.value == null) distanceTraveled.postValue(0F)
+            if (distanceTravelled.value == null) distanceTravelled.postValue(0F)
             return
         }
 
@@ -56,7 +57,7 @@ class TrackViewModel(private val trackRepository: TrackRepository) : ViewModel()
 
     private fun setupDistanceTimeMediatorSources() {
         with(distanceTimeMediator) {
-            addSource(distanceTraveled) {
+            addSource(distanceTravelled) {
                 distanceTimeMediator.value = null
             }
 
@@ -72,32 +73,33 @@ class TrackViewModel(private val trackRepository: TrackRepository) : ViewModel()
         val seconds = (timeMillis / 1000) % 60
 
         val timeDecimal = "$minutes.$seconds".toFloat()
+        val averagePaceValue = timeDecimal / distance
 
-        averagePace.postValue(timeDecimal / distance)
+        if (averagePaceValue.isFinite()) averagePace.postValue(averagePaceValue.round())
     }
 
     private fun saveTrack() {
-        if (distanceTraveled.value != null && timeElapsed.value != null && averagePace.value != null)
+        if (distanceTravelled.value != null && timeElapsed.value != null && averagePace.value != null)
             trackRepository.saveTrack(Track().apply {
-                distanceTravelled = distanceTraveled.value!!
+                distanceTravelled = this@TrackViewModel.distanceTravelled.value!!
                 timeElapsed = this@TrackViewModel.timeElapsed.value!!
                 averagePace = this@TrackViewModel.averagePace.value!!
             })
     }
 
     private fun resetTrackValues() {
-        distanceTraveled.value = 0F
+        distanceTravelled.value = 0F
         timeElapsed.value = 0L
         averagePace.value = 0F
     }
 
     private fun updateDistanceTravelled(value: Float) {
-        distanceTraveled.aggregateValue((value / 1000))
+        distanceTravelled.aggregateValue((value / 1000))
     }
 
     fun updatePace() {
-        if (distanceTraveled.value != null && timeElapsed.value != null)
-            calculateAveragePace(timeElapsed.value!!, distanceTraveled.value!!)
+        if (distanceTravelled.value != null && timeElapsed.value != null)
+            calculateAveragePace(timeElapsed.value!!, distanceTravelled.value!!)
     }
 
     fun start() {

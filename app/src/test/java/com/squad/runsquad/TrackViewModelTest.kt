@@ -1,15 +1,11 @@
 package com.squad.runsquad
 
 import android.location.Location
-import android.util.Log
-import com.google.common.truth.Truth.assertThat
 import com.squad.runsquad.ui.track.TrackViewModel
-import com.squad.runsquad.util.round
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import java.lang.AssertionError
 
 @RunWith(RobolectricTestRunner::class)
 class TrackViewModelTest {
@@ -35,7 +31,7 @@ class TrackViewModelTest {
 
         trackViewModel.updateLocation(location)
 
-        assert(trackViewModel.distanceTraveled.getOrAwaitValue() == 0F)
+        assert(trackViewModel.distanceTravelled.getOrAwaitValue() == 0F)
     }
 
     @Test
@@ -49,7 +45,7 @@ class TrackViewModelTest {
         }
 
         trackViewModel.updateLocation(lastLocation)
-        assert(trackViewModel.distanceTraveled.getOrAwaitValue() == 2.34F)
+        assert(trackViewModel.distanceTravelled.getOrAwaitValue() == 2.34F)
     }
 
     @Test
@@ -73,7 +69,7 @@ class TrackViewModelTest {
         //you need to figure out why after the second update the live data value is 0.0. Maybe because no one is listening to it??
 
 //        throw AssertionError(middleLocation.distanceTo(lastLocation))
-        assert(trackViewModel.distanceTraveled.getOrAwaitValue() == 4.68F)
+        assert(trackViewModel.distanceTravelled.getOrAwaitValue() == 4.68F)
     }
 
 //    @Test

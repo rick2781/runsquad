@@ -16,12 +16,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
-import com.firebase.ui.auth.AuthUI
-import com.firebase.ui.auth.IdpResponse
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
-import com.google.firebase.auth.FirebaseAuth
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
@@ -215,7 +212,7 @@ class TrackActivity : AppCompatActivity() {
             }
         })
 
-        trackViewModel.distanceTraveled.observe(this, Observer {
+        trackViewModel.distanceTravelled.observe(this, Observer {
             distanceTravelled.text = it.round().toString()
         })
 

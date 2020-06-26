@@ -10,15 +10,24 @@ import com.firebase.ui.auth.IdpResponse
 import com.firebase.ui.auth.util.ExtraConstants
 import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
+import com.squad.runsquad.data.model.User
+import com.squad.runsquad.repository.UserRepository
 import com.squad.runsquad.ui.track.TrackActivity
 import org.koin.android.ext.android.inject
 
-
+/**
+ * Since this activity is very small and very likely to not
+ * grow too much over time we will just be putting all
+ * our business logic here.
+ *
+ * Not following any pattern established previously.
+ */
 class LaunchOrchestratorActivity: AppCompatActivity() {
 
     private val TAG = "LaunchOrchestratorActiv"
 
     private val auth: FirebaseAuth by inject()
+    private val userRepository: UserRepository by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,8 +76,12 @@ class LaunchOrchestratorActivity: AppCompatActivity() {
 
             if (resultCode == Activity.RESULT_OK) {
                 // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-
+                FirebaseAuth.getInstance().currentUser?.let {
+                    val user = User(it.uid, it.displayName, it.email)
+                    userRepository.createUser(user) {
+                        startActivity(Intent(this, TrackActivity::class.java))
+                    }
+                }
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
