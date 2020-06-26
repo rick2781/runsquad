@@ -8,6 +8,8 @@ import com.squad.runsquad.data.remotesource.UserRemoteSource
 import com.squad.runsquad.repository.TrackRepository
 import com.squad.runsquad.repository.UserRepository
 import com.squad.runsquad.ui.track.TrackViewModel
+import com.squad.runsquad.ui.tracklist.TrackListAdapter
+import com.squad.runsquad.ui.tracklist.TrackListViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
@@ -32,6 +34,13 @@ val appModule = module {
      */
 
     viewModel { TrackViewModel(get()) }
+    viewModel { TrackListViewModel(get()) }
+
+    /**
+     * Adapters Section
+     */
+
+    factory { TrackListAdapter() }
 
     /**
      * Util Objects Section
