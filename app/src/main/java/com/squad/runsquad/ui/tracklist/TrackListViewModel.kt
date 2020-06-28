@@ -7,7 +7,7 @@ import com.squad.runsquad.repository.TrackRepository
 
 class TrackListViewModel(private val trackRepository: TrackRepository): ViewModel() {
 
-    private val trackList = MutableLiveData<ArrayList<Track>>()
+    val trackList = MutableLiveData<ArrayList<Track>>()
 
     fun getTrackList() = trackRepository.getAllTracks { trackList.postValue(it) }
 }

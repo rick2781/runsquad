@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.squad.runsquad.data.model.User
 import com.squad.runsquad.repository.UserRepository
 import com.squad.runsquad.ui.track.TrackActivity
+import com.squad.runsquad.ui.tracklist.TrackListActivity
 import org.koin.android.ext.android.inject
 
 /**
@@ -37,7 +38,7 @@ class LaunchOrchestratorActivity: AppCompatActivity() {
 
     private fun userRoute() {
         auth.currentUser?.let {
-            startActivity(Intent(this, TrackActivity::class.java))
+            startActivity(Intent(this, TrackListActivity::class.java))
         } ?: kotlin.run {
             launchLoginFirebaseUI()
         }

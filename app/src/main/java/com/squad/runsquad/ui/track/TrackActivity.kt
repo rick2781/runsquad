@@ -121,7 +121,11 @@ class TrackActivity : AppCompatActivity() {
 //        return String.format("%02d:%02d:%02d", h, m, s)
 //    }
 
-    private fun formatPace(pace: Float): String = pace.toString().replace(".", ":")
+    private fun formatPace(pace: Float): String {
+        val paceBeforeSeparator = pace.toInt()
+        val paceAfterSeparator = (pace % 1) * 100
+        return String.format("%2d:%02d", paceBeforeSeparator, paceAfterSeparator.toInt())
+    }
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
