@@ -1,11 +1,13 @@
 package com.squad.runsquad.ui.tracklist
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.squad.runsquad.R
+import com.squad.runsquad.ui.track.TrackActivity
 import kotlinx.android.synthetic.main.activity_track_list.*
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -32,5 +34,7 @@ class TrackListActivity : AppCompatActivity() {
 
             getTrackList()
         }
+
+        fab.setOnClickListener { startActivity(Intent(this, TrackActivity::class.java)) }
     }
 }

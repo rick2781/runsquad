@@ -28,6 +28,7 @@ import com.karumi.dexter.listener.single.PermissionListener
 import com.squad.runsquad.R
 import com.squad.runsquad.data.model.TrackState.ACTIVE
 import com.squad.runsquad.data.model.TrackState.INACTIVE
+import com.squad.runsquad.ui.tracklist.TrackListActivity
 import com.squad.runsquad.util.round
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -102,8 +103,7 @@ class TrackActivity : AppCompatActivity() {
     private fun stopFlow() {
         stopLocationUpdates()
         trackViewModel.stop()
-        //todo - reset values do whatever when it's done
-        //todo - save log with view model when user is done running
+        startActivity(Intent(this, TrackListActivity::class.java))
     }
 
     private fun setupChronometer() {
